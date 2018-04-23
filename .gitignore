@@ -65,3 +65,6 @@ hs_err_pid*
 /storm-multilang/dotnet/**/output
 /storm-multilang/dotnet/**/bin
 /storm-multilang/dotnet/**/obj
+/storm-multilang/dotnet/src/main/dotnet/Dotnet.Storm.Adapter/Properties/PublishProfiles/FolderProfile.pubxml.user
+/storm-multilang/dotnet/src/main/dotnet/Dotnet.Storm.Adapter/Properties/PublishProfiles/FolderProfile.pubxml
+/storm-multilang/dotnet/src/main/dotnet/Dotnet.Storm.Adapter/Dotnet.Storm.Adapter.csproj.user
