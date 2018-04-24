@@ -35,16 +35,17 @@ namespace Dotnet.Storm.Adapter.Test
         }
 
         /// <summary>
-        /// Dump all tuples out of channel cache
+        /// Dump all tuples of the specified component out of channel cache
         /// </summary>
-        /// <returns></returns>
-        public static List<TestOutput> DumpChannel()
+        /// <param name="component">The component for which the outputs will be dumped</param>
+        /// <returns>List of messages</returns>
+        public static List<TestOutput> DumpChannel(Component component)
         {
             List<TestOutput> res = new List<TestOutput>();
 
             while (CacheChannel.IsEmpty() == false)
             {
-                OutMessage message = ((CacheChannel)Channel.Instance).OutputMessage();
+                OutMessage message = ((CacheChannel)component.Channel).OutputMessage();
                 if (message is SpoutTuple)
                 {
                     res.Add(new SpoutOutput((SpoutTuple)message));
