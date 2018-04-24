@@ -21,10 +21,10 @@ namespace Dotnet.Storm.Adapter.Test
         /// <param name="sc">Storm context</param>
         /// <param name="config">Storm configuration</param>
         /// <returns></returns>
-        public static Component CreateComponent(Type type, StormContext sc, Dictionary<string, object> config)
+        public static T CreateComponent<T>(StormContext sc, Dictionary<string, object> config) where T : Component
         {
             // Create component instance
-            Component comp = (Component)Activator.CreateInstance(type);
+            T comp = (T)Activator.CreateInstance(typeof(T));
 
             // Set context and configuration singleton
             comp.Context = sc;
@@ -38,20 +38,21 @@ namespace Dotnet.Storm.Adapter.Test
         /// Dump all tuples out of channel cache
         /// </summary>
         /// <returns></returns>
-        public static List<TestOutput> DumpChannel()
+        public static List<TestOutput> GetOutput(this Component c)
         {
             List<TestOutput> res = new List<TestOutput>();
+            CacheChannel comp_channel = (CacheChannel)c.Channel;
 
-            while (CacheChannel.IsEmpty() == false)
+            while (comp_channel.IsEmpty() == false)
             {
-                OutMessage message = ((CacheChannel)Channel.Instance).OutputMessage();
+                OutMessage message = comp_channel.OutputMessage();
                 if (message is SpoutTuple)
                 {
-                    res.Add(new SpoutOutput((SpoutTuple)message));
+                    res.Add(new SpoutOutput((SpoutTuple)message, c.Context.ComponentId));
                 }
                 else if (message is BoltTuple)
                 {
-                    res.Add(new BoltOutput((BoltTuple)message));
+                    res.Add(new BoltOutput((BoltTuple)message, c.Context.ComponentId));
                 }
             }
 

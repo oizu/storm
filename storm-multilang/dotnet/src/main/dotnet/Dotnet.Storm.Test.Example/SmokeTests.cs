@@ -10,49 +10,70 @@ using System.Collections.Generic;
 
 namespace Dotnet.Storm.Test.Example
 {
-    public class SmokeTests
+    public class HubTest
+    {
+        protected static Dictionary<string, object> GetConfig()
+        {
+            Dictionary<string, object> config = new Dictionary<string, object>
+            {
+                ["configkey1"] = "configvalue1",
+                ["configkey2"] = "configvalue2"
+            };
+            return config;
+        }
+
+        protected static StormContext GetContext()
+        {
+            StormContext sc = new StormContext
+            {
+                ComponentId = "componentid1",
+                StreamToOputputFields = new Dictionary<string, List<string>>()
+            };
+            sc.StreamToOputputFields["default"] = new List<string>(new string[] { "default" });
+            return sc;
+        }
+    }
+
+    public class SmokeTests : HubTest
     {
         [Test]
         public void TestCacheChannel()
         {
             // Initialize configuration
-            Dictionary<string, object> config = new Dictionary<string, object>();
-            config["configkey1"] = "configvalue1";
-            config["configkey2"] = "configvalue2";
+            Dictionary<string, object> config = GetConfig();
 
             // Initialize context
-            StormContext sc = new StormContext();
-            sc.ComponentId = "componentid1";
-            sc.StreamToOputputFields = new Dictionary<string, List<string>>();
-            sc.StreamToOputputFields["default"] = new List<string>(new string[] { "default" });
+            StormContext sc = GetContext();
 
             // Create, and run a spout
-            EmitSentence es = (EmitSentence)TestApi.CreateComponent(typeof(EmitSentence), sc, config);
+            EmitSentence es = TestApi.CreateComponent<EmitSentence>(sc, config);
             es.Next();
-            List<TestOutput> res = TestApi.DumpChannel();
+            List<TestOutput> res = es.GetOutput();
+
             // Verify results and metadata
             Assert.True(res.Count > 0);
             Assert.True(res[0].Stream == "default");
             Assert.True(res[0].ComponentId == "componentid1");
 
             // Create, and run 1st Bolt
-            BaseBolt ss = (BaseBolt)TestApi.CreateComponent(typeof(SplitSentence), sc, config);
+            sc.ComponentId = "componentid2";
+            SplitSentence ss = TestApi.CreateComponent<SplitSentence>(sc, config);
             foreach (var output in res)
             {
-                StormTuple st = new StormTuple(((SpoutOutput)output).Id, "EmitSentence", "TaskId", output.Stream, output.Tuple);
-                ss.Execute(st);
+                ss.Execute(new StormTuple(((SpoutOutput)output).Id, "EmitSentence", "TaskId", output.Stream, output.Tuple));
             }
-            res = TestApi.DumpChannel();
+            res = ss.GetOutput();
+
             // Verify results and metadata
             Assert.True(res.Count > 0);
             Assert.True(res[0].Stream == "default");
 
             // Create, and run 2nd Bolt
-            BaseBolt cw = (BaseBolt)TestApi.CreateComponent(typeof(CountWords), sc, config);
+            sc.ComponentId = "componentid3";
+            CountWords cw = TestApi.CreateComponent<CountWords>(sc, config);
             foreach (var output in res)
             {
-                StormTuple st = new StormTuple("id", "SplitSentence", "TaskId", output.Stream, output.Tuple);
-                cw.Execute(st);
+                cw.Execute(new StormTuple("id", "SplitSentence", "TaskId", output.Stream, output.Tuple));
             }
         }
     }
