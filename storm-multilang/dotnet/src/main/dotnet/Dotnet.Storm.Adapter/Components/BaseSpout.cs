@@ -16,42 +16,41 @@ namespace Dotnet.Storm.Adapter.Components
 
         private const string chars = "abcdefghijklmnopqrstuvwxyz0123456789";
 
-        internal static MemoryCache PendingQueue = MemoryCache.Default;
-        internal static CacheItemPolicy policy;
+        private MemoryCache PendingQueue = MemoryCache.Default;
+
+        private CacheItemPolicy policy;
 
         private bool running = true;
 
-        protected new class Storm : Component.Storm
+        protected void Emit(List<object> tuple, string stream = "default", long task = 0, bool needTaskIds = false)
         {
-            public static void Emit(List<object> tuple, string stream = "default", long task = 0, bool needTaskIds = false)
+            string id = null;
+            if (IsGuaranteed)
             {
-                string id = null;
-                if (IsGuaranteed)
+                id = NextId();
+            }
+
+            VerificationResult result = VerifyOutput(stream, tuple);
+
+            if (result.IsError)
+            {
+                Logger.Error($"{result}  for nex tuple: {tuple}.");
+            }
+            else
+            {
+                SpoutTuple message = new SpoutTuple()
                 {
-                    id = NextId();
-                }
+                    Id = id,
+                    Task = task,
+                    Stream = stream,
+                    Tuple = tuple,
+                    NeedTaskIds = needTaskIds
+                };
 
-                VerificationResult result = VerifyOutput(stream, tuple);
+                Channel.Send(message);
 
-                if (result.IsError)
-                {
-                    Logger.Error($"{result}  for nex tuple: {tuple}.");
-                }
-                else
-                {
-                    SpoutTuple message = new SpoutTuple()
-                    {
-                        Id = id,
-                        Task = task,
-                        Stream = stream,
-                        Tuple = tuple,
-                        NeedTaskIds = needTaskIds
-                    };
-
-                    Channel.Instance.Send(message);
-
+                if (id != null && message != null && policy != null)
                     PendingQueue.Set(id, message, policy);
-                }
             }
         }
 
@@ -66,7 +65,7 @@ namespace Dotnet.Storm.Adapter.Components
 
             while (running)
             {
-                InMessage message = Channel.Instance.Receive<CommandMessage>();
+                InMessage message = Channel.Receive<CommandMessage>();
                 if (message != null)
                 {
                     // there are only two options: task_ids and command
@@ -107,7 +106,7 @@ namespace Dotnet.Storm.Adapter.Components
         {
             if (IsEnabled)
             {
-                Storm.Sync();
+                Sync();
             }
         }
 
@@ -142,7 +141,7 @@ namespace Dotnet.Storm.Adapter.Components
                 {
                     if (PendingQueue[id] is SpoutTuple message)
                     {
-                        Channel.Instance.Send(message);
+                        Channel.Send(message);
                     }
                 }
                 else
@@ -202,7 +201,7 @@ namespace Dotnet.Storm.Adapter.Components
 
         protected bool IsEnabled { get; private set; } = false;
 
-        protected abstract void Next();
+        public abstract void Next();
         #endregion
     }
 }

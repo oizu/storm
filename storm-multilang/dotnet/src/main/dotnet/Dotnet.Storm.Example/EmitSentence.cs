@@ -32,13 +32,13 @@ namespace Dotnet.Storm.Example
 
         private DateTime last;
 
-        protected override void Next()
+        public override void Next()
         {
             DateTime now = DateTime.Now;
 
             if ((now - last).Seconds > 20)
             {
-                Storm.Emit(new List<object>() { sentences[random.Next(9)] });
+                Emit(new List<object>() { sentences[random.Next(9)] });
                 last = now;
             }
         }
