@@ -68,3 +68,4 @@ hs_err_pid*
 /storm-multilang/dotnet/src/main/dotnet/Dotnet.Storm.Adapter/Properties/PublishProfiles/FolderProfile.pubxml.user
 /storm-multilang/dotnet/src/main/dotnet/Dotnet.Storm.Adapter/Properties/PublishProfiles/FolderProfile.pubxml
 /storm-multilang/dotnet/src/main/dotnet/Dotnet.Storm.Adapter/Dotnet.Storm.Adapter.csproj.user
+storm-multilang/dotnet/src/main/dotnet/Dotnet.Storm.Example/log-file.txt
