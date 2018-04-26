@@ -16,9 +16,9 @@ using System.Reflection;
 
 namespace Dotnet.Storm.Adapter
 {
-    public static class Fabric
+    public static class Factory
     {
-        private readonly static ILog Logger = LogManager.GetLogger(typeof(Fabric));
+        private static readonly ILog Logger = LogManager.GetLogger(typeof(Factory));
 
         public static void RunComponent(string[] args)
         {
